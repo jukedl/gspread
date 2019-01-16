@@ -944,6 +944,58 @@ class Worksheet(object):
 
         return data
 
+    def insert_column(
+        self,
+        values,
+        index=1,
+        value_input_option='RAW'
+    ):
+        """Adds a column to the worksheet at the specified index
+        and populates it with values.
+
+        Lengthens the worksheet if there are more values than rows.
+
+        :param values: List of values for the new column.
+        :param index: (optional) Offset for the newly inserted column.
+        :type index: int
+        :param value_input_option: (optional) Determines how input data should
+                                    be interpreted. See `ValueInputOption`_ in
+                                    the Sheets API.
+        :type value_input_option: str
+
+        .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+
+        """
+
+        body = {
+            "requests": [{
+                "insertDimension": {
+                    "range": {
+                      "sheetId": self.id,
+                      "dimension": "COLUMNS",
+                      "startIndex": index - 1,
+                      "endIndex": index
+                    }
+                }
+            }]
+        }
+
+        self.spreadsheet.batch_update(body)
+
+        range_label = '%s!%s' % (self.title, 'A%s' % index)
+
+        data = self.spreadsheet.values_update(
+            range_label,
+            params={
+                'valueInputOption': value_input_option
+            },
+            body={
+                'values': [values]
+            }
+        )
+
+        return data
+
     def delete_row(self, index):
         """"Deletes the row from the worksheet at the specified index.
 
